@@ -1,0 +1,88 @@
+{% extends "base.html" %}{% load garage_extras %}
+{% block title %}Dashboard{% endblock %}
+{% block content %}
+<div class="hero-banner mb-4">
+  <h1 class="h3 mb-1">Welcome back, {{ user.display_name }}!</h1>
+  <p class="mb-0 opacity-75">
+    {% if role == 'admin' %}Here is an overview of your workshop today.
+    {% elif role == 'mechanic' %}Here are your assigned jobs and progress.
+    {% else %}Manage your vehicles, appointments and invoices in one place.{% endif %}
+  </p>
+</div>
+
+<div class="row g-3 mb-4">
+  {% for label, value, icon_name, color in stats %}
+  <div class="col-6 col-lg-{% if stats|length > 4 %}2{% else %}3{% endif %}">
+    <div class="card stat-card shadow-sm border-0 h-100">
+      <div class="card-body">
+        <div class="stat-icon bg-{{ color }}-subtle text-{{ color }}-emphasis"><i class="bi bi-{{ icon_name }}"></i></div>
+        <div class="stat-value">{{ value }}</div>
+        <div class="text-muted small">{{ label }}</div>
+      </div>
+    </div>
+  </div>
+  {% endfor %}
+</div>
+
+{% if role == 'admin' %}
+<div class="row g-3 mb-4">
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Revenue - last 6 months (paid invoices)</h2>
+      <canvas id="revenueChart" height="110"></canvas>
+    </div></div>
+  </div>
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Appointments by status</h2>
+      <canvas id="statusChart" height="220"></canvas>
+    </div></div>
+  </div>
+</div>
+{{ chart_data|json_script:"chart-data" }}
+{% endif %}
+
+<div class="card shadow-sm border-0">
+  <div class="card-header bg-white d-flex justify-content-between align-items-center">
+    <h2 class="h6 mb-0">{{ recent_title }}</h2>
+    <a href="{% url 'appointment_list' %}" class="small">View all</a>
+  </div>
+  <div class="table-responsive">
+    <table class="table table-hover align-middle mb-0">
+      <thead class="table-light"><tr><th>#</th><th>Date</th><th>Time</th><th>Vehicle</th><th>Service</th><th>Status</th><th></th></tr></thead>
+      <tbody>
+      {% for a in recent %}
+        <tr>
+          <td>{{ a.pk }}</td><td>{{ a.scheduled_date|date:"d M Y" }}</td><td>{{ a.scheduled_time|time:"H:i" }}</td>
+          <td>{{ a.vehicle.registration_number }}</td><td>{{ a.service_type.name }}</td>
+          <td><span class="badge rounded-pill bg-{{ a.get_status_display|badge }}">{{ a.get_status_display }}</span></td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-info" href="{% url 'appointment_detail' a.pk %}"><i class="bi bi-eye"></i></a></td>
+        </tr>
+      {% empty %}
+        <tr><td colspan="7" class="text-center text-muted py-4">Nothing to show yet.</td></tr>
+      {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+{% if role == 'admin' %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js"></script>
+<script>
+  const data = JSON.parse(document.getElementById("chart-data").textContent);
+  new Chart(document.getElementById("revenueChart"), {
+    type: "bar",
+    data: { labels: data.months, datasets: [{ label: "Revenue (Rs.)", data: data.revenue, backgroundColor: "#6f42c1", borderRadius: 6 }] },
+    options: { plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+  });
+  new Chart(document.getElementById("statusChart"), {
+    type: "doughnut",
+    data: { labels: data.status_labels, datasets: [{ data: data.status_counts,
+      backgroundColor: ["#ffc107", "#0dcaf0", "#0d6efd", "#198754", "#6c757d"] }] },
+    options: { plugins: { legend: { position: "bottom" } } }
+  });
+</script>
+{% endif %}
+{% endblock %}

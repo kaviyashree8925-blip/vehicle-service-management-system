@@ -1,0 +1,63 @@
+{% extends "base.html" %}{% load garage_extras %}
+{% block title %}{{ invoice.invoice_number }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3 no-print">
+  <h1 class="page-title"><i class="bi bi-receipt me-2"></i>Invoice</h1>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-outline-dark" data-print><i class="bi bi-printer"></i> Print</button>
+    {% if user.role == 'admin' %}<a href="{% url 'invoice_edit' invoice.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>{% endif %}
+    <a href="{% url 'invoice_list' %}" class="btn btn-outline-secondary">Back</a>
+  </div>
+</div>
+
+<div class="card shadow-sm border-0 invoice-sheet">
+  <div class="card-body p-4 p-md-5">
+    <div class="d-flex justify-content-between flex-wrap gap-3 mb-4">
+      <div>
+        <h2 class="h3 fw-bold text-gradient mb-0"><i class="bi bi-car-front-fill me-2"></i>AutoCare VMS</h2>
+        <div class="text-muted small">Vehicle service &amp; repair</div>
+      </div>
+      <div class="text-md-end">
+        <div class="h4 mb-1">{{ invoice.invoice_number }}</div>
+        <span class="badge bg-{{ invoice.get_status_display|badge }} fs-6">{{ invoice.get_status_display }}</span>
+        <div class="small text-muted mt-1">Issued {{ invoice.issue_date|date:"d M Y" }}</div>
+        {% if invoice.paid_on %}<div class="small text-muted">Paid {{ invoice.paid_on|date:"d M Y" }} via {{ invoice.get_payment_method_display }}</div>{% endif %}
+      </div>
+    </div>
+    <div class="row mb-4">
+      <div class="col-md-6"><div class="text-muted small text-uppercase">Billed to</div>
+        <strong>{{ invoice.customer.full_name }}</strong><br>{{ invoice.customer.email }}<br>{{ invoice.customer.phone }}</div>
+      <div class="col-md-6 mt-3 mt-md-0"><div class="text-muted small text-uppercase">Vehicle</div>
+        <strong>{{ invoice.vehicle.registration_number }}</strong><br>{{ invoice.vehicle.make }} {{ invoice.vehicle.model }} ({{ invoice.vehicle.year }})<br>
+        Service: {{ record.appointment.service_type.name }}</div>
+    </div>
+    <div class="table-responsive">
+    <table class="table">
+      <thead class="table-light"><tr><th>Description</th><th class="text-end">Amount</th></tr></thead>
+      <tbody>
+        <tr><td>Labour - {{ record.appointment.service_type.name }}</td><td class="text-end">{{ record.labour_cost|inr }}</td></tr>
+        <tr><td>Parts &amp; materials</td><td class="text-end">{{ record.parts_cost|inr }}</td></tr>
+        <tr><td>Discount</td><td class="text-end">- {{ invoice.discount|inr }}</td></tr>
+        <tr><td>Subtotal</td><td class="text-end">{{ invoice.subtotal|inr }}</td></tr>
+        <tr><td>Tax ({{ invoice.tax_percent }}%)</td><td class="text-end">{{ invoice.tax_amount|inr }}</td></tr>
+        <tr class="table-primary fw-bold fs-5"><td>Total payable</td><td class="text-end">{{ invoice.total|inr }}</td></tr>
+      </tbody>
+    </table>
+    </div>
+    <p class="small text-muted mb-0">Work carried out: {{ record.work_done }}</p>
+  </div>
+</div>
+
+{% if user.role == 'admin' and invoice.status == 'unpaid' %}
+<div class="card shadow-sm border-0 mt-3 no-print"><div class="card-body">
+  <form method="post" action="{% url 'invoice_pay' invoice.pk %}" class="row g-2 align-items-end">{% csrf_token %}
+    <div class="col-md-4"><label class="form-label small">Record payment</label>
+      <select name="payment_method" class="form-select" required>
+        <option value="">Payment method...</option>
+        {% for value, label in methods %}<option value="{{ value }}">{{ label }}</option>{% endfor %}
+      </select></div>
+    <div class="col-auto"><button class="btn btn-success"><i class="bi bi-cash-coin me-1"></i>Mark as paid</button></div>
+  </form>
+</div></div>
+{% endif %}
+{% endblock %}

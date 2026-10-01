@@ -1,0 +1,75 @@
+{% load static garage_extras %}<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AutoCare{% endblock %} | AutoCare VMS</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css" rel="stylesheet">
+  <link href="{% static 'css/style.css' %}" rel="stylesheet">
+</head>
+<body class="{% if user.is_authenticated %}app-body{% else %}auth-body{% endif %}">
+{% if user.is_authenticated %}
+{% with current=request.resolver_match.url_name %}
+<nav class="navbar navbar-expand-lg navbar-dark app-navbar sticky-top">
+  <div class="container-xl">
+    <a class="navbar-brand fw-bold" href="{% url 'dashboard' %}"><i class="bi bi-car-front-fill me-2"></i>AutoCare VMS</a>
+    <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#mainNav" aria-label="Toggle navigation">
+      <span class="navbar-toggler-icon"></span>
+    </button>
+    <div class="collapse navbar-collapse" id="mainNav">
+      <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+        <li class="nav-item"><a class="nav-link {% if current == 'dashboard' %}active{% endif %}" href="{% url 'dashboard' %}"><i class="bi bi-speedometer2 me-1"></i>Dashboard</a></li>
+        {% if user.role == 'admin' %}
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'customer' %}active{% endif %}" href="{% url 'customer_list' %}"><i class="bi bi-people me-1"></i>Customers</a></li>
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'vehicle' %}active{% endif %}" href="{% url 'vehicle_list' %}"><i class="bi bi-car-front me-1"></i>Vehicles</a></li>
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'mechanic' %}active{% endif %}" href="{% url 'mechanic_list' %}"><i class="bi bi-wrench-adjustable me-1"></i>Mechanics</a></li>
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'service' %}active{% endif %}" href="{% url 'service_list' %}"><i class="bi bi-tools me-1"></i>Services</a></li>
+        {% elif user.role == 'customer' %}
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'vehicle' %}active{% endif %}" href="{% url 'vehicle_list' %}"><i class="bi bi-car-front me-1"></i>My Vehicles</a></li>
+        <li class="nav-item"><a class="nav-link {% if current == 'appointment_book' %}active{% endif %}" href="{% url 'appointment_book' %}"><i class="bi bi-calendar-plus me-1"></i>Book Service</a></li>
+        {% endif %}
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'appointment' and current != 'appointment_book' %}active{% endif %}" href="{% url 'appointment_list' %}"><i class="bi bi-calendar-check me-1"></i>{% if user.role == 'mechanic' %}My Jobs{% else %}Appointments{% endif %}</a></li>
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'history' or current|startswith:'record' %}active{% endif %}" href="{% url 'history_list' %}"><i class="bi bi-clock-history me-1"></i>History</a></li>
+        {% if user.role != 'mechanic' %}
+        <li class="nav-item"><a class="nav-link {% if current|startswith:'invoice' %}active{% endif %}" href="{% url 'invoice_list' %}"><i class="bi bi-receipt me-1"></i>Invoices</a></li>
+        {% endif %}
+      </ul>
+      <div class="dropdown">
+        <a class="btn btn-sm btn-light dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+          <i class="bi bi-person-circle me-1"></i>{{ user.display_name }}
+          <span class="badge bg-primary ms-1">{{ user.get_role_display }}</span>
+        </a>
+        <ul class="dropdown-menu dropdown-menu-end shadow">
+          {% if user.is_superuser %}<li><a class="dropdown-item" href="{% url 'admin:index' %}"><i class="bi bi-gear me-2"></i>Django Admin</a></li><li><hr class="dropdown-divider"></li>{% endif %}
+          <li>
+            <form method="post" action="{% url 'logout' %}">{% csrf_token %}
+              <button type="submit" class="dropdown-item text-danger"><i class="bi bi-box-arrow-right me-2"></i>Logout</button>
+            </form>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</nav>
+{% endwith %}
+{% endif %}
+
+<main class="{% if user.is_authenticated %}container-xl py-4{% else %}container py-5{% endif %}">
+  {% for message in messages %}
+  <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show shadow-sm" role="alert">
+    {{ message }}
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+  </div>
+  {% endfor %}
+  {% block content %}{% endblock %}
+</main>
+
+{% if user.is_authenticated %}
+<footer class="text-center text-muted small py-4">AutoCare Vehicle Management System &middot; Built with Django, MySQL &amp; Bootstrap</footer>
+{% endif %}
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+{% block extra_js %}{% endblock %}
+<script src="{% static 'js/main.js' %}"></script>
+</body>
+</html>

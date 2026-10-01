@@ -1,0 +1,43 @@
+{% extends "base.html" %}{% load garage_extras %}
+{% block title %}{{ customer.full_name }}{% endblock %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+  <h1 class="page-title"><i class="bi bi-person-circle me-2"></i>{{ customer.full_name }}</h1>
+  <div>
+    <a href="{% url 'customer_edit' customer.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>
+    <a href="{% url 'customer_list' %}" class="btn btn-outline-secondary">Back</a>
+  </div>
+</div>
+<div class="row g-3">
+  <div class="col-lg-4">
+    <div class="card shadow-sm border-0 h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Contact</h2>
+      <p class="mb-1"><i class="bi bi-envelope me-2"></i>{{ customer.email }}</p>
+      <p class="mb-1"><i class="bi bi-telephone me-2"></i>{{ customer.phone }}</p>
+      <p class="mb-1"><i class="bi bi-geo-alt me-2"></i>{{ customer.address|default:"-" }}</p>
+      <p class="mb-0"><i class="bi bi-key me-2"></i>Login: {% if customer.user %}<span class="badge bg-success">{{ customer.user.username }}</span>{% else %}<span class="badge bg-secondary">No account</span>{% endif %}</p>
+    </div></div>
+  </div>
+  <div class="col-lg-8">
+    <div class="card shadow-sm border-0 mb-3">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Vehicles ({{ vehicles|length }})</h2></div>
+      <div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead class="table-light"><tr><th>Reg. No.</th><th>Vehicle</th><th>Year</th><th>Fuel</th><th></th></tr></thead>
+        <tbody>{% for v in vehicles %}<tr><td>{{ v.registration_number }}</td><td>{{ v.make }} {{ v.model }}</td><td>{{ v.year }}</td><td>{{ v.get_fuel_type_display }}</td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-info" href="{% url 'vehicle_detail' v.pk %}"><i class="bi bi-eye"></i></a></td></tr>
+        {% empty %}<tr><td colspan="5" class="text-muted text-center py-3">No vehicles registered.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+    <div class="card shadow-sm border-0">
+      <div class="card-header bg-white"><h2 class="h6 mb-0">Recent appointments</h2></div>
+      <div class="table-responsive"><table class="table mb-0 align-middle">
+        <thead class="table-light"><tr><th>Date</th><th>Vehicle</th><th>Service</th><th>Status</th><th></th></tr></thead>
+        <tbody>{% for a in appointments %}<tr><td>{{ a.scheduled_date|date:"d M Y" }}</td><td>{{ a.vehicle.registration_number }}</td><td>{{ a.service_type.name }}</td>
+          <td><span class="badge rounded-pill bg-{{ a.get_status_display|badge }}">{{ a.get_status_display }}</span></td>
+          <td class="text-end"><a class="btn btn-sm btn-outline-info" href="{% url 'appointment_detail' a.pk %}"><i class="bi bi-eye"></i></a></td></tr>
+        {% empty %}<tr><td colspan="5" class="text-muted text-center py-3">No appointments yet.</td></tr>{% endfor %}</tbody>
+      </table></div>
+    </div>
+  </div>
+</div>
+{% endblock %}

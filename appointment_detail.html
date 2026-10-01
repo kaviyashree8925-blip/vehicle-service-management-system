@@ -1,0 +1,73 @@
+{% extends "base.html" %}{% load garage_extras %}
+{% block title %}Appointment #{{ appointment.pk }}{% endblock %}
+{% block content %}
+<div class="d-flex flex-wrap justify-content-between align-items-center mb-3 gap-2">
+  <h1 class="page-title"><i class="bi bi-calendar-check me-2"></i>Appointment #{{ appointment.pk }}
+    <span class="badge rounded-pill bg-{{ appointment.get_status_display|badge }} fs-6 align-middle">{{ appointment.get_status_display }}</span></h1>
+  <div class="d-flex gap-2">
+    {% if user.role == 'admin' %}<a href="{% url 'appointment_edit' appointment.pk %}" class="btn btn-outline-primary"><i class="bi bi-pencil"></i> Edit</a>{% endif %}
+    {% if can_cancel %}
+    <form method="post" action="{% url 'appointment_cancel' appointment.pk %}" onsubmit="return confirm('Cancel this appointment?');">{% csrf_token %}
+      <button class="btn btn-outline-danger"><i class="bi bi-x-circle"></i> Cancel appointment</button>
+    </form>
+    {% endif %}
+    <a href="{% url 'appointment_list' %}" class="btn btn-outline-secondary">Back</a>
+  </div>
+</div>
+
+<div class="row g-3">
+  <div class="col-lg-6">
+    <div class="card shadow-sm border-0 h-100"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Booking details</h2>
+      <dl class="row mb-0">
+        <dt class="col-4">Customer</dt><dd class="col-8">{{ appointment.customer.full_name }} ({{ appointment.customer.phone }})</dd>
+        <dt class="col-4">Vehicle</dt><dd class="col-8">{{ appointment.vehicle }}</dd>
+        <dt class="col-4">Service</dt><dd class="col-8">{{ appointment.service_type.name }}</dd>
+        <dt class="col-4">Date &amp; time</dt><dd class="col-8">{{ appointment.scheduled_date|date:"D, d M Y" }} at {{ appointment.scheduled_time|time:"H:i" }}</dd>
+        <dt class="col-4">Mechanic</dt><dd class="col-8">{{ appointment.mechanic.full_name|default:"Not assigned yet" }}</dd>
+        <dt class="col-4">Issue</dt><dd class="col-8">{{ appointment.issue_description|default:"-" }}</dd>
+      </dl>
+    </div></div>
+  </div>
+
+  <div class="col-lg-6">
+    {% if status_form %}
+    <div class="card shadow-sm border-0 mb-3"><div class="card-body">
+      <h2 class="h6 text-uppercase text-muted">Update status</h2>
+      <form method="post" action="{% url 'appointment_status' appointment.pk %}" class="row g-2 align-items-end">{% csrf_token %}
+        {% for field in status_form %}
+        <div class="col-sm-{% if status_form.fields|length > 1 %}5{% else %}8{% endif %}"><label class="form-label small">{{ field.label }}</label>{{ field }}</div>
+        {% endfor %}
+        <div class="col-auto"><button class="btn btn-primary">Update</button></div>
+      </form>
+    </div></div>
+    {% endif %}
+
+    {% if can_add_record %}
+    <a href="{% url 'record_add' appointment.pk %}" class="btn btn-gradient w-100 mb-3"><i class="bi bi-clipboard-check me-1"></i>Complete job &amp; add service record</a>
+    {% endif %}
+
+    {% if record %}
+    <div class="card shadow-sm border-0 mb-3"><div class="card-body">
+      <div class="d-flex justify-content-between"><h2 class="h6 text-uppercase text-muted">Service record</h2>
+        {% if user.role != 'customer' %}<a href="{% url 'record_edit' record.pk %}" class="small">Edit</a>{% endif %}</div>
+      <p class="mb-2">{{ record.work_done|linebreaksbr }}</p>
+      <dl class="row mb-2">
+        <dt class="col-5">Completed on</dt><dd class="col-7">{{ record.completed_on|date:"d M Y" }}</dd>
+        <dt class="col-5">Odometer</dt><dd class="col-7">{{ record.odometer_reading }} km</dd>
+        <dt class="col-5">Parts</dt><dd class="col-7">{{ record.parts_cost|inr }}</dd>
+        <dt class="col-5">Labour</dt><dd class="col-7">{{ record.labour_cost|inr }}</dd>
+        <dt class="col-5">Total</dt><dd class="col-7 fw-bold">{{ record.total|inr }}</dd>
+      </dl>
+      {% if record.recommendations %}<div class="alert alert-info py-2 mb-0"><strong>Recommendation:</strong> {{ record.recommendations }}</div>{% endif %}
+    </div></div>
+
+    {% if invoice %}
+    <a href="{% url 'invoice_detail' invoice.pk %}" class="btn btn-outline-success w-100"><i class="bi bi-receipt me-1"></i>View invoice {{ invoice.invoice_number }} ({{ invoice.get_status_display }})</a>
+    {% elif user.role == 'admin' %}
+    <a href="{% url 'invoice_create' record.pk %}" class="btn btn-success w-100"><i class="bi bi-receipt me-1"></i>Generate invoice</a>
+    {% endif %}
+    {% endif %}
+  </div>
+</div>
+{% endblock %}

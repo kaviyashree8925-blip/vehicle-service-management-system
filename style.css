@@ -1,0 +1,39 @@
+:root {
+  --brand-1: #4f46e5;
+  --brand-2: #7c3aed;
+  --brand-3: #ec4899;
+}
+body.app-body { background: #f3f4f9; min-height: 100vh; }
+body.auth-body { background: linear-gradient(135deg, #312e81 0%, #6d28d9 50%, #db2777 100%); min-height: 100vh; }
+
+.app-navbar { background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); box-shadow: 0 2px 12px rgba(79, 70, 229, .35); }
+.app-navbar .nav-link { border-radius: 8px; margin: 0 2px; padding: .45rem .8rem; color: rgba(255,255,255,.85); }
+.app-navbar .nav-link:hover { background: rgba(255,255,255,.12); color: #fff; }
+.app-navbar .nav-link.active { background: rgba(255,255,255,.22); color: #fff; font-weight: 600; }
+
+.btn-gradient { background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); color: #fff; border: 0; }
+.btn-gradient:hover { color: #fff; filter: brightness(1.1); transform: translateY(-1px); }
+.gradient-header { background: linear-gradient(90deg, var(--brand-1), var(--brand-2)); color: #fff; padding: 1rem 1.5rem; }
+.text-gradient { background: linear-gradient(90deg, var(--brand-1), var(--brand-3)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+
+.page-title { font-size: 1.6rem; font-weight: 700; color: #1e1b4b; margin: 0; }
+.hero-banner { background: linear-gradient(120deg, var(--brand-1), var(--brand-2) 60%, var(--brand-3)); color: #fff; border-radius: 16px; padding: 1.75rem 2rem; box-shadow: 0 8px 24px rgba(124, 58, 237, .3); }
+
+.card { border-radius: 14px; }
+.stat-card { transition: transform .15s ease, box-shadow .15s ease; }
+.stat-card:hover { transform: translateY(-3px); box-shadow: 0 .75rem 1.5rem rgba(0,0,0,.1) !important; }
+.stat-icon { width: 46px; height: 46px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; margin-bottom: .6rem; }
+.stat-value { font-size: 1.5rem; font-weight: 700; line-height: 1.2; }
+
+.table > :not(caption) > * > * { padding: .75rem 1rem; }
+.has-error .form-control, .has-error .form-select { border-color: #dc3545; }
+.form-control:focus, .form-select:focus { border-color: var(--brand-2); box-shadow: 0 0 0 .2rem rgba(124, 58, 237, .2); }
+
+.plate { display: inline-block; background: #fde047; border: 3px solid #111827; border-radius: 8px; padding: .35rem 1.1rem; font: 700 1.4rem/1.2 "Courier New", monospace; letter-spacing: 2px; color: #111827; }
+.invoice-sheet { border-top: 6px solid var(--brand-2) !important; }
+
+@media print {
+  .no-print, .app-navbar, footer, .alert { display: none !important; }
+  body.app-body { background: #fff; }
+  .card { box-shadow: none !important; border: 0 !important; }
+}
